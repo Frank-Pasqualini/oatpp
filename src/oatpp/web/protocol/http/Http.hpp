@@ -26,6 +26,7 @@
 #define oatpp_web_protocol_http_Http_hpp
 
 #include "oatpp/network/tcp/Connection.hpp"
+#include "oatpp/network/udp/Connection.hpp"
 
 #include "oatpp/web/protocol/CommunicationError.hpp"
 

@@ -22,21 +22,21 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullAsyncClientTest_hpp
-#define oatpp_test_web_FullAsyncClientTest_hpp
+#ifndef oatpp_test_web_FullAsyncClientTestTCP_hpp
+#define oatpp_test_web_FullAsyncClientTestTCP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
 namespace oatpp { namespace test { namespace web {
 
-class FullAsyncClientTest : public UnitTest {
+class FullAsyncClientTestTCP : public UnitTest {
 private:
   v_uint16 m_port;
   v_int32 m_connectionsPerEndpoint;
 public:
 
-  FullAsyncClientTest(v_uint16 port, v_int32 connectionsPerEndpoint)
-    : UnitTest("TEST[web::FullAsyncClientTest]")
+  FullAsyncClientTestTCP(v_uint16 port, v_int32 connectionsPerEndpoint)
+    : UnitTest("TEST[web::FullAsyncClientTestTCP]")
     , m_port(port)
     , m_connectionsPerEndpoint(connectionsPerEndpoint)
   {}
@@ -47,4 +47,4 @@ public:
 
 }}}
 
-#endif /* oatpp_test_web_FullAsyncClientTest_hpp */
+#endif /* oatpp_test_web_FullAsyncClientTestTCP_hpp */

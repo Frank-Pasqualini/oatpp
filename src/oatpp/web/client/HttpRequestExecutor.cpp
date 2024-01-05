@@ -28,6 +28,7 @@
 #include "oatpp/web/protocol/http/outgoing/Request.hpp"
 
 #include "oatpp/network/tcp/Connection.hpp"
+#include "oatpp/network/udp/Connection.hpp"
 
 #include "oatpp/core/data/stream/BufferStream.hpp"
 #include "oatpp/core/data/stream/StreamBufferedProxy.hpp"

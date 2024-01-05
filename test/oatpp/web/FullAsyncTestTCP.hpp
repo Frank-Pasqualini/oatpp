@@ -22,27 +22,29 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_server_ServerStopTest_hpp
-#define oatpp_test_web_server_ServerStopTest_hpp
+#ifndef oatpp_test_web_FullAsyncTestTCP_hpp
+#define oatpp_test_web_FullAsyncTestTCP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
-namespace oatpp { namespace test { namespace web { namespace server {
-
-class ServerStopTest : public UnitTest {
+namespace oatpp { namespace test { namespace web {
+  
+class FullAsyncTestTCP : public UnitTest {
 private:
   v_uint16 m_port;
+  v_int32 m_iterationsPerStep;
 public:
-
-  ServerStopTest(v_uint16 port)
-    : UnitTest("TEST[web::server::ServerStopTest]")
+  
+  FullAsyncTestTCP(v_uint16 port, v_int32 iterationsPerStep)
+    : UnitTest("TEST[web::FullAsyncTestTCP]")
     , m_port(port)
+    , m_iterationsPerStep(iterationsPerStep)
   {}
 
   void onRun() override;
-
+  
 };
+  
+}}}
 
-}}}}
-
-#endif /* oatpp_test_web_server_ServerStopTest_hpp */
+#endif /* oatpp_test_web_FullAsyncTestTCP_hpp */

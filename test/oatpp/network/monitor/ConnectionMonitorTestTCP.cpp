@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "ConnectionMonitorTest.hpp"
+#include "ConnectionMonitorTestTCP.hpp"
 
 #include "oatpp/web/client/HttpRequestExecutor.hpp"
 #include "oatpp/web/server/AsyncHttpConnectionHandler.hpp"
@@ -213,7 +213,7 @@ void runAsyncClient() {
 
 }
 
-void ConnectionMonitorTest::onRun() {
+void ConnectionMonitorTestTCP::onRun() {
 
   auto connectionProvider = oatpp::network::tcp::server::ConnectionProvider::createShared(
     {"localhost", 8000});

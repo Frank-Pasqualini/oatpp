@@ -22,22 +22,29 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_network_monitor_ConnectionMonitorTest_hpp
-#define oatpp_test_network_monitor_ConnectionMonitorTest_hpp
+#ifndef oatpp_test_web_FullTestTCP_hpp
+#define oatpp_test_web_FullTestTCP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
-namespace oatpp { namespace test { namespace network { namespace monitor {
+namespace oatpp { namespace test { namespace web {
 
-class ConnectionMonitorTest : public UnitTest {
+class FullTestTCP : public UnitTest {
+private:
+  v_uint16 m_port;
+  v_int32 m_iterationsPerStep;
 public:
+  
+  FullTestTCP(v_uint16 port, v_int32 iterationsPerStep)
+    : UnitTest("TEST[web::FullTestTCP]")
+    , m_port(port)
+    , m_iterationsPerStep(iterationsPerStep)
+  {}
 
-  ConnectionMonitorTest():UnitTest("TEST[network::monitor::ConnectionMonitorTest]"){}
   void onRun() override;
-
+  
 };
 
-}}}}
-
-
-#endif // oatpp_test_network_monitor_ConnectionMonitorTest_hpp
+}}}
+  
+#endif /* oatpp_test_web_FullTestTCP_hpp */

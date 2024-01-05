@@ -65,8 +65,10 @@ add_executable(oatppAllTests
         oatpp/network/ConnectionPoolTest.hpp
         oatpp/network/UrlTest.cpp
         oatpp/network/UrlTest.hpp
-        oatpp/network/monitor/ConnectionMonitorTest.cpp
-        oatpp/network/monitor/ConnectionMonitorTest.hpp
+        oatpp/network/monitor/ConnectionMonitorTestTCP.cpp
+        oatpp/network/monitor/ConnectionMonitorTestTCP.hpp
+        oatpp/network/monitor/ConnectionMonitorTestUDP.cpp
+        oatpp/network/monitor/ConnectionMonitorTestUDP.hpp
         oatpp/network/virtual_/InterfaceTest.cpp
         oatpp/network/virtual_/InterfaceTest.hpp
         oatpp/network/virtual_/PipeTest.cpp
@@ -83,18 +85,30 @@ add_executable(oatppAllTests
         oatpp/parser/json/mapping/EnumTest.hpp
         oatpp/parser/json/mapping/UnorderedSetTest.cpp
         oatpp/parser/json/mapping/UnorderedSetTest.hpp
-        oatpp/web/ClientRetryTest.cpp
-        oatpp/web/ClientRetryTest.hpp
-        oatpp/web/FullAsyncClientTest.cpp
-        oatpp/web/FullAsyncClientTest.hpp
-        oatpp/web/FullAsyncTest.cpp
-        oatpp/web/FullAsyncTest.hpp
-        oatpp/web/FullTest.cpp
-        oatpp/web/FullTest.hpp
-        oatpp/web/PipelineAsyncTest.cpp
-        oatpp/web/PipelineAsyncTest.hpp
-        oatpp/web/PipelineTest.cpp
-        oatpp/web/PipelineTest.hpp
+        oatpp/web/ClientRetryTestTCP.cpp
+        oatpp/web/ClientRetryTestTCP.hpp
+        oatpp/web/ClientRetryTestUDP.cpp
+        oatpp/web/ClientRetryTestUDP.hpp
+        oatpp/web/FullAsyncClientTestTCP.cpp
+        oatpp/web/FullAsyncClientTestTCP.hpp
+        oatpp/web/FullAsyncClientTestUDP.cpp
+        oatpp/web/FullAsyncClientTestUDP.hpp
+        oatpp/web/FullAsyncTestTCP.cpp
+        oatpp/web/FullAsyncTestTCP.hpp
+        oatpp/web/FullAsyncTestUDP.cpp
+        oatpp/web/FullAsyncTestUDP.hpp
+        oatpp/web/FullTestTCP.cpp
+        oatpp/web/FullTestTCP.hpp
+        oatpp/web/FullTestUDP.cpp
+        oatpp/web/FullTestUDP.hpp
+        oatpp/web/PipelineAsyncTestTCP.cpp
+        oatpp/web/PipelineAsyncTestTCP.hpp
+        oatpp/web/PipelineAsyncTestUDP.cpp
+        oatpp/web/PipelineAsyncTestUDP.hpp
+        oatpp/web/PipelineTestTCP.cpp
+        oatpp/web/PipelineTestTCP.hpp
+        oatpp/web/PipelineTestUDP.cpp
+        oatpp/web/PipelineTestUDP.hpp
         oatpp/web/app/BasicAuthorizationController.hpp
         oatpp/web/app/BearerAuthorizationController.hpp
         oatpp/web/app/Client.hpp
@@ -110,8 +124,10 @@ add_executable(oatppAllTests
         oatpp/web/protocol/http/encoding/ChunkedTest.hpp
         oatpp/web/server/HttpRouterTest.cpp
         oatpp/web/server/HttpRouterTest.hpp
-        oatpp/web/server/ServerStopTest.cpp
-        oatpp/web/server/ServerStopTest.hpp
+        oatpp/web/server/ServerStopTestTCP.cpp
+        oatpp/web/server/ServerStopTestTCP.hpp
+        oatpp/web/server/ServerStopTestUDP.cpp
+        oatpp/web/server/ServerStopTestUDP.hpp
         oatpp/web/server/api/ApiControllerTest.cpp
         oatpp/web/server/api/ApiControllerTest.hpp
         oatpp/web/server/handler/AuthorizationHandlerTest.cpp

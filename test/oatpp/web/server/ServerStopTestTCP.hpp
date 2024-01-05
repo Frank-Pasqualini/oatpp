@@ -22,20 +22,20 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_ClientRetryTest_hpp
-#define oatpp_test_web_ClientRetryTest_hpp
+#ifndef oatpp_test_web_server_ServerStopTestTCP_hpp
+#define oatpp_test_web_server_ServerStopTestTCP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
-namespace oatpp { namespace test { namespace web {
+namespace oatpp { namespace test { namespace web { namespace server {
 
-class ClientRetryTest : public UnitTest {
+class ServerStopTestTCP : public UnitTest {
 private:
   v_uint16 m_port;
 public:
 
-  ClientRetryTest(v_uint16 port)
-    : UnitTest("TEST[web::ClientRetryTest]")
+  ServerStopTestTCP(v_uint16 port)
+    : UnitTest("TEST[web::server::ServerStopTestTCP]")
     , m_port(port)
   {}
 
@@ -43,6 +43,6 @@ public:
 
 };
 
-}}}
+}}}}
 
-#endif /* oatpp_test_web_ClientRetryTest_hpp */
+#endif /* oatpp_test_web_server_ServerStopTestTCP_hpp */

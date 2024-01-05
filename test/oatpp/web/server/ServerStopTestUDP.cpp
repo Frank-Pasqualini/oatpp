@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "ServerStopTest.hpp"
+#include "ServerStopTestUDP.hpp"
 
 #include "oatpp/web/client/HttpRequestExecutor.hpp"
 #include "oatpp/web/server/AsyncHttpConnectionHandler.hpp"
@@ -31,8 +31,8 @@
 
 #include "oatpp/network/virtual_/server/ConnectionProvider.hpp"
 #include "oatpp/network/virtual_/client/ConnectionProvider.hpp"
-#include "oatpp/network/tcp/server/ConnectionProvider.hpp"
-#include "oatpp/network/tcp/client/ConnectionProvider.hpp"
+#include "oatpp/network/udp/server/ConnectionProvider.hpp"
+#include "oatpp/network/udp/client/ConnectionProvider.hpp"
 #include "oatpp/network/Server.hpp"
 
 namespace oatpp { namespace test { namespace web { namespace server {
@@ -172,7 +172,7 @@ void runClient(const std::shared_ptr<oatpp::network::ClientConnectionProvider>& 
 
 }
 
-void ServerStopTest::onRun() {
+void ServerStopTestUDP::onRun() {
 
   std::shared_ptr<oatpp::network::ServerConnectionProvider> serverConnectionProvider;
   std::shared_ptr<oatpp::network::ClientConnectionProvider> clientConnectionProvider;
@@ -182,8 +182,8 @@ void ServerStopTest::onRun() {
     serverConnectionProvider = oatpp::network::virtual_::server::ConnectionProvider::createShared(_interface);
     clientConnectionProvider = oatpp::network::virtual_::client::ConnectionProvider::createShared(_interface);
   } else {
-    serverConnectionProvider = oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", 8000});
-    clientConnectionProvider = oatpp::network::tcp::client::ConnectionProvider::createShared({"localhost", 8000});
+    serverConnectionProvider = oatpp::network::udp::server::ConnectionProvider::createShared({"localhost", 8000});
+    clientConnectionProvider = oatpp::network::udp::client::ConnectionProvider::createShared({"localhost", 8000});
   }
 
   {

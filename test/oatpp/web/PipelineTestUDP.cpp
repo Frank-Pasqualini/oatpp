@@ -22,17 +22,17 @@
  *
  ***************************************************************************/
 
-#include "PipelineAsyncTest.hpp"
+#include "PipelineTestUDP.hpp"
 
-#include "oatpp/web/app/ControllerAsync.hpp"
+#include "oatpp/web/app/Controller.hpp"
 
-#include "oatpp/web/server/AsyncHttpConnectionHandler.hpp"
+#include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
 
 #include "oatpp/parser/json/mapping/ObjectMapper.hpp"
 
-#include "oatpp/network/tcp/server/ConnectionProvider.hpp"
-#include "oatpp/network/tcp/client/ConnectionProvider.hpp"
+#include "oatpp/network/udp/server/ConnectionProvider.hpp"
+#include "oatpp/network/udp/client/ConnectionProvider.hpp"
 
 #include "oatpp/network/virtual_/client/ConnectionProvider.hpp"
 #include "oatpp/network/virtual_/server/ConnectionProvider.hpp"
@@ -56,10 +56,6 @@ public:
     : m_port(port)
   {}
 
-  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor)([] {
-    return std::make_shared<oatpp::async::Executor>(1, 1, 1);
-  }());
-
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::virtual_::Interface>, virtualInterface)([] {
     return oatpp::network::virtual_::Interface::obtainShared("virtualhost");
   }());
@@ -74,7 +70,7 @@ public:
     }
 
     return std::static_pointer_cast<oatpp::network::ServerConnectionProvider>(
-      oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", m_port})
+      oatpp::network::udp::server::ConnectionProvider::createShared({"localhost", m_port})
     );
 
   }());
@@ -85,8 +81,7 @@ public:
 
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
-    OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executr);
-    return oatpp::web::server::AsyncHttpConnectionHandler::createShared(router, executr);
+    return oatpp::web::server::HttpConnectionHandler::createShared(router);
   }());
 
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::data::mapping::ObjectMapper>, objectMapper)([] {
@@ -103,7 +98,7 @@ public:
     }
 
     return std::static_pointer_cast<oatpp::network::ClientConnectionProvider>(
-      oatpp::network::tcp::client::ConnectionProvider::createShared({"localhost", m_port})
+      oatpp::network::udp::client::ConnectionProvider::createShared({"localhost", m_port})
     );
 
   }());
@@ -118,21 +113,21 @@ const char* const SAMPLE_IN =
 
 const char* const SAMPLE_OUT =
   "HTTP/1.1 200 OK\r\n"
-  "Content-Length: 20\r\n"
+  "Content-Length: 14\r\n"
   "Connection: keep-alive\r\n"
   "Server: oatpp/" OATPP_VERSION "\r\n"
   "\r\n"
-  "Hello World Async!!!";
+  "Hello World!!!";
 
 }
 
-void PipelineAsyncTest::onRun() {
+void PipelineTestUDP::onRun() {
 
   TestComponent component(m_port);
 
   oatpp::test::web::ClientServerTestRunner runner;
 
-  runner.addController(app::ControllerAsync::createShared());
+  runner.addController(app::Controller::createShared());
 
   runner.run([this] {
 
@@ -149,7 +144,10 @@ void PipelineAsyncTest::onRun() {
         pipelineStream << SAMPLE_IN;
       }
 
-      oatpp::data::stream::BufferInputStream inputStream(pipelineStream.toString());
+      auto dataToSend = pipelineStream.toString();
+      OATPP_LOGD(TAG, "Sending %lu bytes", dataToSend->size())
+
+      oatpp::data::stream::BufferInputStream inputStream(dataToSend);
 
       oatpp::data::buffer::IOBuffer ioBuffer;
 
@@ -163,7 +161,10 @@ void PipelineAsyncTest::onRun() {
       oatpp::data::stream::BufferOutputStream receiveStream;
       oatpp::data::buffer::IOBuffer ioBuffer;
 
-      oatpp::data::stream::transfer(connection.object.get(), &receiveStream, static_cast<v_io_size>(sample->size() * static_cast<size_t>(m_pipelineSize)), ioBuffer.getData(), ioBuffer.getSize());
+      v_io_size transferSize = static_cast<v_io_size>(sample->size() * static_cast<size_t>(m_pipelineSize));
+
+      OATPP_LOGD(TAG, "want to Receive %ld bytes", transferSize)
+      oatpp::data::stream::transfer(connection.object.get(), &receiveStream, transferSize, ioBuffer.getData(), ioBuffer.getSize());
 
       auto result = receiveStream.toString();
 
@@ -175,19 +176,9 @@ void PipelineAsyncTest::onRun() {
     pipeOutThread.join();
     pipeInThread.join();
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Stop server and unblock accepting thread
-
-    //connection.reset();
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
   }, std::chrono::minutes(10));
 
-  OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor);
-
-  executor->waitTasksFinished();
-  executor->stop();
-  executor->join();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
 }
 

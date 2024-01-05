@@ -1,22 +1,30 @@
 
-#include "oatpp/web/ClientRetryTest.hpp"
-#include "oatpp/web/FullTest.hpp"
-#include "oatpp/web/FullAsyncTest.hpp"
-#include "oatpp/web/FullAsyncClientTest.hpp"
-#include "oatpp/web/PipelineTest.hpp"
-#include "oatpp/web/PipelineAsyncTest.hpp"
+#include "oatpp/web/ClientRetryTestTCP.hpp"
+#include "oatpp/web/ClientRetryTestUDP.hpp"
+#include "oatpp/web/FullTestTCP.hpp"
+#include "oatpp/web/FullTestUDP.hpp"
+#include "oatpp/web/FullAsyncTestTCP.hpp"
+#include "oatpp/web/FullAsyncTestUDP.hpp"
+#include "oatpp/web/FullAsyncClientTestTCP.hpp"
+#include "oatpp/web/FullAsyncClientTestUDP.hpp"
+#include "oatpp/web/PipelineTestTCP.hpp"
+#include "oatpp/web/PipelineTestUDP.hpp"
+#include "oatpp/web/PipelineAsyncTestTCP.hpp"
+#include "oatpp/web/PipelineAsyncTestUDP.hpp"
 #include "oatpp/web/protocol/http/encoding/ChunkedTest.hpp"
 #include "oatpp/web/server/api/ApiControllerTest.hpp"
 #include "oatpp/web/server/handler/AuthorizationHandlerTest.hpp"
 #include "oatpp/web/server/HttpRouterTest.hpp"
-#include "oatpp/web/server/ServerStopTest.hpp"
+#include "oatpp/web/server/ServerStopTestTCP.hpp"
+#include "oatpp/web/server/ServerStopTestUDP.hpp"
 #include "oatpp/web/mime/multipart/StatefulParserTest.hpp"
 
 #include "oatpp/network/virtual_/PipeTest.hpp"
 #include "oatpp/network/virtual_/InterfaceTest.hpp"
 #include "oatpp/network/UrlTest.hpp"
 #include "oatpp/network/ConnectionPoolTest.hpp"
-#include "oatpp/network/monitor/ConnectionMonitorTest.hpp"
+#include "oatpp/network/monitor/ConnectionMonitorTestTCP.hpp"
+#include "oatpp/network/monitor/ConnectionMonitorTestUDP.hpp"
 
 #include "oatpp/parser/json/mapping/DeserializerTest.hpp"
 #include "oatpp/parser/json/mapping/DTOMapperPerfTest.hpp"
@@ -141,7 +149,8 @@ void runTests() {
 
   OATPP_RUN_TEST(oatpp::test::network::UrlTest);
   OATPP_RUN_TEST(oatpp::test::network::ConnectionPoolTest);
-  OATPP_RUN_TEST(oatpp::test::network::monitor::ConnectionMonitorTest);
+  OATPP_RUN_TEST(oatpp::test::network::monitor::ConnectionMonitorTestTCP);
+  OATPP_RUN_TEST(oatpp::test::network::monitor::ConnectionMonitorTestUDP);
   OATPP_RUN_TEST(oatpp::test::network::virtual_::PipeTest);
   OATPP_RUN_TEST(oatpp::test::network::virtual_::InterfaceTest);
 
@@ -155,70 +164,140 @@ void runTests() {
 
   {
 
-    oatpp::test::web::server::ServerStopTest test_virtual(0);
+    oatpp::test::web::server::ServerStopTestTCP test_virtual(0);
     test_virtual.run();
 
-    oatpp::test::web::server::ServerStopTest test_port(8000);
+    oatpp::test::web::server::ServerStopTestTCP test_port(8000);
     test_port.run();
 
   }
 
   {
 
-    oatpp::test::web::PipelineTest test_virtual(0, 3000);
+    oatpp::test::web::server::ServerStopTestUDP test_virtual(0);
     test_virtual.run();
 
-    oatpp::test::web::PipelineTest test_port(8000, 3000);
+    oatpp::test::web::server::ServerStopTestUDP test_port(8000);
     test_port.run();
 
   }
 
   {
 
-    oatpp::test::web::PipelineAsyncTest test_virtual(0, 3000);
+    oatpp::test::web::PipelineTestTCP test_virtual(0, 3000);
     test_virtual.run();
 
-    oatpp::test::web::PipelineAsyncTest test_port(8000, 3000);
+    oatpp::test::web::PipelineTestTCP test_port(8000, 3000);
     test_port.run();
 
   }
 
   {
 
-    oatpp::test::web::FullTest test_virtual(0, 1000);
+    oatpp::test::web::PipelineTestUDP test_virtual(0, 3000);
     test_virtual.run();
 
-    oatpp::test::web::FullTest test_port(8000, 5);
+    oatpp::test::web::PipelineTestUDP test_port(8000, 3000);
     test_port.run();
 
   }
 
   {
 
-    oatpp::test::web::FullAsyncTest test_virtual(0, 1000);
+    oatpp::test::web::PipelineAsyncTestTCP test_virtual(0, 3000);
     test_virtual.run();
 
-    oatpp::test::web::FullAsyncTest test_port(8000, 5);
+    oatpp::test::web::PipelineAsyncTestTCP test_port(8000, 3000);
     test_port.run();
 
   }
 
   {
 
-    oatpp::test::web::FullAsyncClientTest test_virtual(0, 1000);
+    oatpp::test::web::PipelineAsyncTestUDP test_virtual(0, 3000);
+    test_virtual.run();
+
+    oatpp::test::web::PipelineAsyncTestUDP test_port(8000, 3000);
+    test_port.run();
+
+  }
+
+  {
+
+    oatpp::test::web::FullTestTCP test_virtual(0, 1000);
+    test_virtual.run();
+
+    oatpp::test::web::FullTestTCP test_port(8000, 5);
+    test_port.run();
+
+  }
+
+  {
+
+    oatpp::test::web::FullTestUDP test_virtual(0, 1000);
+    test_virtual.run();
+
+    oatpp::test::web::FullTestUDP test_port(8000, 5);
+    test_port.run();
+
+  }
+
+  {
+
+    oatpp::test::web::FullAsyncTestTCP test_virtual(0, 1000);
+    test_virtual.run();
+
+    oatpp::test::web::FullAsyncTestTCP test_port(8000, 5);
+    test_port.run();
+
+  }
+
+  {
+
+    oatpp::test::web::FullAsyncTestUDP test_virtual(0, 1000);
+    test_virtual.run();
+
+    oatpp::test::web::FullAsyncTestUDP test_port(8000, 5);
+    test_port.run();
+
+  }
+
+  {
+
+    oatpp::test::web::FullAsyncClientTestTCP test_virtual(0, 1000);
     test_virtual.run(20);
 
-    oatpp::test::web::FullAsyncClientTest test_port(8000, 5);
+    oatpp::test::web::FullAsyncClientTestTCP test_port(8000, 5);
     test_port.run(1);
 
   }
 
   {
 
-    oatpp::test::web::ClientRetryTest test_virtual(0);
+    oatpp::test::web::FullAsyncClientTestUDP test_virtual(0, 1000);
+    test_virtual.run(20);
+
+    oatpp::test::web::FullAsyncClientTestUDP test_port(8000, 5);
+    test_port.run(1);
+
+  }
+
+  {
+
+    oatpp::test::web::ClientRetryTestTCP test_virtual(0);
     test_virtual.run();
 
-    oatpp::test::web::ClientRetryTest test_port(8000);
+    oatpp::test::web::ClientRetryTestTCP test_port(8000);
+    test_port.run();
+
+  }
+
+  {
+
+    oatpp::test::web::ClientRetryTestUDP test_virtual(0);
+    test_virtual.run();
+
+    oatpp::test::web::ClientRetryTestUDP test_port(8000);
     test_port.run();
 
   }

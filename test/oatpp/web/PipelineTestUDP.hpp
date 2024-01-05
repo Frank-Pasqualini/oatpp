@@ -22,21 +22,21 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_PipelineTest_hpp
-#define oatpp_test_web_PipelineTest_hpp
+#ifndef oatpp_test_web_PipelineTestUDP_hpp
+#define oatpp_test_web_PipelineTestUDP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
 namespace oatpp { namespace test { namespace web {
 
-class PipelineTest : public UnitTest {
+class PipelineTestUDP : public UnitTest {
 private:
   v_uint16 m_port;
   v_int32 m_pipelineSize;
 public:
 
-  PipelineTest(v_uint16 port, v_int32 pipelineSize)
-    : UnitTest("TEST[web::PipelineTest]")
+  PipelineTestUDP(v_uint16 port, v_int32 pipelineSize)
+    : UnitTest("TEST[web::PipelineTestUDP]")
     , m_port(port)
     , m_pipelineSize(pipelineSize)
   {}
@@ -47,4 +47,4 @@ public:
 
 }}}
 
-#endif // oatpp_test_web_PipelineTest_hpp
+#endif // oatpp_test_web_PipelineTestUDP_hpp

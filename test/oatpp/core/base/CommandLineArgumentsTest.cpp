@@ -51,7 +51,8 @@ void CommandLineArgumentsTest::onRun() {
   
   OATPP_ASSERT(std::strcmp(args.getArgumentStartingWith("http"), "http://127.0.0.1:8000/") == 0)
   OATPP_ASSERT(std::strcmp(args.getArgumentStartingWith("tcp", "tcp://default/"), "tcp://default/") == 0)
-  
+  OATPP_ASSERT(std::strcmp(args.getArgumentStartingWith("udp", "udp://default/"), "udp://default/") == 0)
+
   OATPP_ASSERT(std::strcmp(args.getNamedArgumentValue("-c"), "100") == 0)
   OATPP_ASSERT(std::strcmp(args.getNamedArgumentValue("-c", nullptr), "100") == 0)
   

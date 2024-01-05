@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "FullAsyncClientTest.hpp"
+#include "FullAsyncClientTestUDP.hpp"
 
 #include "oatpp/web/app/Client.hpp"
 
@@ -35,8 +35,8 @@
 
 #include "oatpp/parser/json/mapping/ObjectMapper.hpp"
 
-#include "oatpp/network/tcp/server/ConnectionProvider.hpp"
-#include "oatpp/network/tcp/client/ConnectionProvider.hpp"
+#include "oatpp/network/udp/server/ConnectionProvider.hpp"
+#include "oatpp/network/udp/client/ConnectionProvider.hpp"
 
 #include "oatpp/network/virtual_/client/ConnectionProvider.hpp"
 #include "oatpp/network/virtual_/server/ConnectionProvider.hpp"
@@ -79,7 +79,7 @@ public:
     }
 
     return std::static_pointer_cast<oatpp::network::ServerConnectionProvider>(
-      oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", m_port})
+      oatpp::network::udp::server::ConnectionProvider::createShared({"localhost", m_port})
     );
 
   }());
@@ -108,7 +108,7 @@ public:
     }
 
     return std::static_pointer_cast<oatpp::network::ClientConnectionProvider>(
-      oatpp::network::tcp::client::ConnectionProvider::createShared({"localhost", m_port})
+      oatpp::network::udp::client::ConnectionProvider::createShared({"localhost", m_port})
     );
 
   }());
@@ -155,9 +155,9 @@ public:
   Action handleError(Error* error) override {
     if(error->is<oatpp::AsyncIOError>()) {
       auto e = static_cast<oatpp::AsyncIOError*>(error);
-      OATPP_LOGE("[FullAsyncClientTest::ClientCoroutine_getRootAsync::handleError()]", "AsyncIOError. %s, %ld", e->what(), e->getCode())
+      OATPP_LOGE("[FullAsyncClientTestUDP::ClientCoroutine_getRootAsync::handleError()]", "AsyncIOError. %s, %ld", e->what(), e->getCode())
     } else {
-      OATPP_LOGE("[FullAsyncClientTest::ClientCoroutine_getRootAsync::handleError()]", "Error. %s", error->what())
+      OATPP_LOGE("[FullAsyncClientTestUDP::ClientCoroutine_getRootAsync::handleError()]", "Error. %s", error->what())
     }
     OATPP_ASSERT(!"Error")
   }
@@ -196,9 +196,9 @@ public:
   Action handleError(Error* error) override {
     if(error->is<oatpp::AsyncIOError>()) {
       auto e = static_cast<oatpp::AsyncIOError*>(error);
-      OATPP_LOGE("[FullAsyncClientTest::ClientCoroutine_postBodyAsync::handleError()]", "AsyncIOError. %s, %ld", e->what(), e->getCode())
+      OATPP_LOGE("[FullAsyncClientTestUDP::ClientCoroutine_postBodyAsync::handleError()]", "AsyncIOError. %s, %ld", e->what(), e->getCode())
     } else {
-      OATPP_LOGE("[FullAsyncClientTest::ClientCoroutine_postBodyAsync::handleError()]", "Error. %s", error->what())
+      OATPP_LOGE("[FullAsyncClientTestUDP::ClientCoroutine_postBodyAsync::handleError()]", "Error. %s", error->what())
     }
     OATPP_ASSERT(!"Error")
   }
@@ -242,9 +242,9 @@ public:
     if(error) {
       if(error->is<oatpp::AsyncIOError>()) {
         auto e = static_cast<oatpp::AsyncIOError*>(error);
-        OATPP_LOGE("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "AsyncIOError. %s, %ld", e->what(), e->getCode())
+        OATPP_LOGE("[FullAsyncClientTestUDP::ClientCoroutine_echoBodyAsync::handleError()]", "AsyncIOError. %s, %ld", e->what(), e->getCode())
       } else {
-        OATPP_LOGE("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "Error. %s", error->what())
+        OATPP_LOGE("[FullAsyncClientTestUDP::ClientCoroutine_echoBodyAsync::handleError()]", "Error. %s", error->what())
       }
     }
     OATPP_ASSERT(!"Error")
@@ -256,7 +256,7 @@ std::atomic<v_int32> ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER(0);
 
 }
 
-void FullAsyncClientTest::onRun() {
+void FullAsyncClientTestUDP::onRun() {
 
   TestComponent component(m_port);
 

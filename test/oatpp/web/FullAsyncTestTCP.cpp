@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "FullAsyncTest.hpp"
+#include "FullAsyncTestTCP.hpp"
 
 #include "oatpp/web/app/Client.hpp"
 
@@ -138,7 +138,7 @@ std::shared_ptr<PartList> createMultipart(const std::unordered_map<oatpp::String
 
 }
   
-void FullAsyncTest::onRun() {
+void FullAsyncTestTCP::onRun() {
 
   TestComponent component(m_port);
 

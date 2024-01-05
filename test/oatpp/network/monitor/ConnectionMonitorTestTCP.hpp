@@ -22,29 +22,22 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_PipelineAsyncTest_hpp
-#define oatpp_test_web_PipelineAsyncTest_hpp
+#ifndef oatpp_test_network_monitor_ConnectionMonitorTestTCP_hpp
+#define oatpp_test_network_monitor_ConnectionMonitorTestTCP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
-namespace oatpp { namespace test { namespace web {
+namespace oatpp { namespace test { namespace network { namespace monitor {
 
-class PipelineAsyncTest : public UnitTest {
-private:
-  v_uint16 m_port;
-  v_int32 m_pipelineSize;
+class ConnectionMonitorTestTCP : public UnitTest {
 public:
 
-  PipelineAsyncTest(v_uint16 port, v_int32 pipelineSize)
-    : UnitTest("TEST[web::PipelineAsyncTest]")
-    , m_port(port)
-    , m_pipelineSize(pipelineSize)
-  {}
-
+  ConnectionMonitorTestTCP():UnitTest("TEST[network::monitor::ConnectionMonitorTestTCP]"){}
   void onRun() override;
 
 };
 
-}}}
+}}}}
 
-#endif // oatpp_test_web_PipelineAsyncTest_hpp
+
+#endif // oatpp_test_network_monitor_ConnectionMonitorTestTCP_hpp

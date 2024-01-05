@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "ClientRetryTest.hpp"
+#include "ClientRetryTestUDP.hpp"
 
 #include "oatpp/web/app/Client.hpp"
 
@@ -149,7 +149,7 @@ void runServer(v_uint16 port, v_int32 delaySeconds, v_int32 iterations, bool sta
 
 }
 
-void ClientRetryTest::onRun() {
+void ClientRetryTestUDP::onRun() {
 
   TestClientComponent component(m_port);
 

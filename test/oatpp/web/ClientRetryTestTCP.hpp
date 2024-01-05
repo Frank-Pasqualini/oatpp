@@ -22,29 +22,27 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullAsyncTest_hpp
-#define oatpp_test_web_FullAsyncTest_hpp
+#ifndef oatpp_test_web_ClientRetryTestTCP_hpp
+#define oatpp_test_web_ClientRetryTestTCP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
 namespace oatpp { namespace test { namespace web {
-  
-class FullAsyncTest : public UnitTest {
+
+class ClientRetryTestTCP : public UnitTest {
 private:
   v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
 public:
-  
-  FullAsyncTest(v_uint16 port, v_int32 iterationsPerStep)
-    : UnitTest("TEST[web::FullAsyncTest]")
+
+  ClientRetryTestTCP(v_uint16 port)
+    : UnitTest("TEST[web::ClientRetryTestTCP]")
     , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
   {}
 
   void onRun() override;
-  
+
 };
-  
+
 }}}
 
-#endif /* oatpp_test_web_FullAsyncTest_hpp */
+#endif /* oatpp_test_web_ClientRetryTestTCP_hpp */

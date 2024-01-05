@@ -22,29 +22,27 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#ifndef oatpp_test_web_server_ServerStopTestUDP_hpp
+#define oatpp_test_web_server_ServerStopTestUDP_hpp
 
 #include "oatpp-test/UnitTest.hpp"
 
-namespace oatpp { namespace test { namespace web {
+namespace oatpp { namespace test { namespace web { namespace server {
 
-class FullTest : public UnitTest {
+class ServerStopTestUDP : public UnitTest {
 private:
   v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
 public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep)
-    : UnitTest("TEST[web::FullTest]")
+
+  ServerStopTestUDP(v_uint16 port)
+    : UnitTest("TEST[web::server::ServerStopTestUDP]")
     , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
   {}
 
   void onRun() override;
-  
+
 };
 
-}}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */
+}}}}
+
+#endif /* oatpp_test_web_server_ServerStopTestUDP_hpp */
