@@ -34,7 +34,7 @@
 #if defined(WIN32) || defined(_WIN32)
   #include <io.h>
   #include <winsock2.h>
-  #include <ws2udpip.h>
+  #include <ws2tcpip.h>
 #else
   #include <netdb.h>
   #include <arpa/inet.h>
