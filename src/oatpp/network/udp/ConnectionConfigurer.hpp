@@ -41,7 +41,7 @@ public:
 
   /**
    * Configure connection options.
-   * @param connection
+   * @param handle
    */
   virtual void configure(oatpp::v_io_handle handle) = 0;
 };
