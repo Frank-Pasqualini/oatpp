@@ -25,6 +25,7 @@
 #ifndef oatpp_network_udp_server_ConnectionProvider_hpp
 #define oatpp_network_udp_server_ConnectionProvider_hpp
 
+#include "oatpp/core/IODefinitions.hpp"
 #include "oatpp/core/async/Coroutine.hpp"
 #include "oatpp/core/data/stream/Stream.hpp"
 #include "oatpp/core/provider/Invalidator.hpp"
@@ -32,7 +33,9 @@
 #include "oatpp/network/Address.hpp"
 #include "oatpp/network/ConnectionProvider.hpp"
 
+#include <atomic>
 #include <memory>
+#include <netinet/in.h>
 
 namespace oatpp { namespace network { namespace udp { namespace server {
 
@@ -88,7 +91,9 @@ private:
 
   std::shared_ptr<ConnectionInvalidator> m_invalidator;
   Address m_address;
-
+  std::atomic<bool> m_closed;
+  v_io_handle m_serverHandle;
+  sockaddr* m_addr;
 };
 
 }}}}

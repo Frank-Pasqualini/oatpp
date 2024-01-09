@@ -180,6 +180,8 @@ add_library(oatpp
         oatpp/network/udp/client/ConnectionProvider.hpp
         oatpp/network/udp/server/ConnectionProvider.cpp
         oatpp/network/udp/server/ConnectionProvider.hpp
+        oatpp/network/udp/Connection.cpp
+        oatpp/network/udp/Connection.hpp
         oatpp/network/virtual_/Interface.cpp
         oatpp/network/virtual_/Interface.hpp
         oatpp/network/virtual_/Pipe.cpp
