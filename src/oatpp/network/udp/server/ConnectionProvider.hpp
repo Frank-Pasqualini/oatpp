@@ -25,153 +25,72 @@
 #ifndef oatpp_network_udp_server_ConnectionProvider_hpp
 #define oatpp_network_udp_server_ConnectionProvider_hpp
 
+#include "oatpp/core/async/Coroutine.hpp"
+#include "oatpp/core/data/stream/Stream.hpp"
+#include "oatpp/core/provider/Invalidator.hpp"
+#include "oatpp/core/provider/Provider.hpp"
 #include "oatpp/network/Address.hpp"
 #include "oatpp/network/ConnectionProvider.hpp"
-#include "oatpp/network/udp/Connection.hpp"
-#include "oatpp/network/udp/ConnectionConfigurer.hpp"
 
-#include "oatpp/core/Types.hpp"
+#include <memory>
 
 namespace oatpp { namespace network { namespace udp { namespace server {
 
 /**
- * Simple provider of UDP connections.
+ * Simple provider of server UDP connections.
  */
-class ConnectionProvider : public ServerConnectionProvider {
+class ConnectionProvider final : public ServerConnectionProvider {
+public:
+
+  /**
+   * Constructor.
+   * @param address - &id:oatpp::network::Address;.
+   */
+  explicit ConnectionProvider(const Address& address);
+
+  /**
+   * Create shared server ConnectionProvider.
+   * @param address - &id:oatpp::network::Address;.
+   * @return - &id:std::shared_ptr<oatpp::network::udp::server::ConnectionProvider>;.
+   */
+  static std::shared_ptr<ConnectionProvider> createShared(const Address& address);
+
+  /**
+   * Destructor.
+   */
+  ~ConnectionProvider() override;
+
+  /**
+   * Implements &id:oatpp::provider::Provider::stop;.
+   */
+  void stop() override;
+
+  /**
+   * Get connection.
+   * @return &id:oatpp::provider::ResourceHandle<oatpp::data::stream::IOStream>;.
+   */
+  provider::ResourceHandle<data::stream::IOStream> get() override;
+
+  /**
+   * Get connection in asynchronous manner.
+   * @return &id:oatpp::async::CoroutineStarterForResult<const oatpp::provider::ResourceHandle<oatpp::data::stream::IOStream>&>;.
+   */
+  async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&> getAsync() override;
+
 private:
 
-  class ConnectionInvalidator : public provider::Invalidator<data::stream::IOStream> {
+  class ConnectionInvalidator final : public provider::Invalidator<data::stream::IOStream> {
   public:
 
     void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override;
 
   };
 
-public:
-
-  /**
-   * Connection with extra data - ex.: peer address.
-   */
-  class ExtendedConnection : public oatpp::network::udp::Connection {
-  public:
-
-    static const char* const PROPERTY_PEER_ADDRESS;
-    static const char* const PROPERTY_PEER_ADDRESS_FORMAT;
-    static const char* const PROPERTY_PEER_PORT;
-
-  protected:
-    data::stream::DefaultInitializedContext m_context;
-  public:
-
-    /**
-     * Constructor.
-     * @param handle - &id:oatpp::v_io_handle;.
-     * @param properties - &id:oatpp::data::stream::Context::Properties;.
-     */
-    ExtendedConnection(v_io_handle handle, data::stream::Context::Properties&& properties);
-
-    /**
-     * Get output stream context.
-     * @return - &id:oatpp::data::stream::Context;.
-     */
-    oatpp::data::stream::Context& getOutputStreamContext() override;
-
-    /**
-     * Get input stream context. <br>
-     * @return - &id:oatpp::data::stream::Context;.
-     */
-    oatpp::data::stream::Context& getInputStreamContext() override;
-
-  };
-
-private:
   std::shared_ptr<ConnectionInvalidator> m_invalidator;
-  network::Address m_address;
-  std::atomic<bool> m_closed;
-  oatpp::v_io_handle m_serverHandle;
-  bool m_useExtendedConnections;
-  std::shared_ptr<ConnectionConfigurer> m_connectionConfigurer;
-private:
-  oatpp::v_io_handle instantiateServer();
-private:
-  void prepareConnectionHandle(oatpp::v_io_handle handle);
-  provider::ResourceHandle<data::stream::IOStream> getDefaultConnection();
-  provider::ResourceHandle<data::stream::IOStream> getExtendedConnection();
-public:
+  Address m_address;
 
-  /**
-   * Constructor.
-   * @param address - &id:oatpp::network::Address;.
-   * @param useExtendedConnections - set `true` to use &l:ConnectionProvider::ExtendedConnection;.
-   * `false` to use &id:oatpp::network::udp::Connection;.
-   */
-  ConnectionProvider(const network::Address& address, bool useExtendedConnections = false);
-
-public:
-
-  /**
-   * Create shared ConnectionProvider.
-   * @param address - &id:oatpp::network::Address;.
-   * @param useExtendedConnections - set `true` to use &l:ConnectionProvider::ExtendedConnection;.
-   * `false` to use &id:oatpp::network::udp::Connection;.
-   * @return - `std::shared_ptr` to ConnectionProvider.
-   */
-  static std::shared_ptr<ConnectionProvider> createShared(const network::Address& address, bool useExtendedConnections = false){
-    return std::make_shared<ConnectionProvider>(address, useExtendedConnections);
-  }
-
-  /**
-   * Set connection configurer.
-   * @param connectionConfigurer
-   */
-  void setConnectionConfigurer(const std::shared_ptr<ConnectionConfigurer>& connectionConfigurer);
-
-  /**
-   * Virtual destructor.
-   */
-  ~ConnectionProvider() override;
-
-  /**
-   * Close accept-socket.
-   */
-  void stop() override;
-
-  /**
-   * Get incoming connection.
-   * @return &id:oatpp::data::stream::IOStream;.
-   */
-  provider::ResourceHandle<data::stream::IOStream> get() override;
-
-  /**
-   * No need to implement this.<br>
-   * For Asynchronous IO in oatpp it is considered to be a good practice
-   * to accept connections in a seperate thread with the blocking accept()
-   * and then process connections in Asynchronous manner with non-blocking read/write.
-   * <br>
-   * *It may be implemented later*
-   */
-  oatpp::async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&> getAsync() override {
-    /*
-     *  No need to implement this.
-     *  For Asynchronous IO in oatpp it is considered to be a good practice
-     *  to accept connections in a seperate thread with the blocking accept()
-     *  and then process connections in Asynchronous manner with non-blocking read/write
-     *
-     *  It may be implemented later
-     */
-    throw std::runtime_error("[oatpp::network::udp::server::ConnectionProvider::getAsync()]: Error. Not implemented.");
-  }
-
-  /**
-   * Get address - &id:oatpp::network::Address;.
-   * @return
-   */
-  const network::Address& getAddress() const {
-    return m_address;
-  }
-  
 };
-  
+
 }}}}
 
 #endif /* oatpp_netword_udp_server_ConnectionProvider_hpp */

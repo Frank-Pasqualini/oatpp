@@ -176,9 +176,6 @@ add_library(oatpp
         oatpp/network/tcp/client/ConnectionProvider.hpp
         oatpp/network/tcp/server/ConnectionProvider.cpp
         oatpp/network/tcp/server/ConnectionProvider.hpp
-        oatpp/network/udp/Connection.cpp
-        oatpp/network/udp/Connection.hpp
-        oatpp/network/udp/ConnectionConfigurer.hpp
         oatpp/network/udp/client/ConnectionProvider.cpp
         oatpp/network/udp/client/ConnectionProvider.hpp
         oatpp/network/udp/server/ConnectionProvider.cpp
