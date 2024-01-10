@@ -30,6 +30,7 @@
 #include "oatpp/core/data/stream/Stream.hpp"
 
 #include <cerrno>
+#include <cstddef>
 #include <fcntl.h>
 #include <stdexcept>
 #include <unistd.h>
@@ -96,7 +97,7 @@ v_io_size Connection::write(const void* buff, const v_buff_size count, async::Ac
 #endif
 
   const auto result = sendto(m_handle, buff, static_cast<size_t>(count), flags,
-                             reinterpret_cast<const struct sockaddr*>(&m_addr), sizeof(m_addr));
+                             reinterpret_cast<struct sockaddr*>(&m_addr), sizeof(m_addr));
   if (result < 0) {
     const auto err = errno;
 
