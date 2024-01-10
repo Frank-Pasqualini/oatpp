@@ -41,7 +41,9 @@
 #include <unistd.h>
 #include <utility>
 #include <asm-generic/socket.h>
+#include <bits/types/struct_timeval.h>
 #include <netinet/in.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 
 namespace oatpp { namespace network { namespace udp { namespace server {
@@ -53,15 +55,24 @@ ConnectionProvider::ConnectionProvider(Address address)
   : m_invalidator(std::make_shared<ConnectionInvalidator>())
     , m_address(std::move(address))
     , m_closed(false)
+    , m_serverHandle(INVALID_IO_HANDLE)
     , m_addr() {
   setProperty(PROPERTY_HOST, m_address.host);
-  const auto port_str = utils::conversion::int32ToStr(m_address.port);
-  setProperty(PROPERTY_PORT, port_str);
+  setProperty(PROPERTY_PORT, utils::conversion::int32ToStr(m_address.port));
 
+#if defined(WIN32) || defined(_WIN32)
+  // TODO(fpasqualini)
+  throw std::runtime_error("[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]: Error. Not implemented.");
+#else
+
+  constexpr int yes = 1;
+
+  addrinfo* result = nullptr;
   addrinfo hints = {};
+
   hints.ai_socktype = SOCK_DGRAM;
-  hints.ai_flags = AI_PASSIVE;
   hints.ai_protocol = 0;
+  hints.ai_flags = AI_PASSIVE;
 
   switch (m_address.family) {
     case Address::IP_4:
@@ -75,32 +86,24 @@ ConnectionProvider::ConnectionProvider(Address address)
       hints.ai_family = AF_UNSPEC;
   }
 
-  addrinfo* result = nullptr;
+  const auto port_str = utils::conversion::int32ToStr(m_address.port);
+
   const auto res = getaddrinfo(m_address.host->c_str(), port_str->c_str(), &hints, &result);
-
   if (res != 0) {
-    std::string error_string =
-      "[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]. Error. Call to getaddrinfo() failed: ";
-    throw std::runtime_error(error_string.append(gai_strerror(res)));
-  }
-
-  if (result == nullptr) {
     throw std::runtime_error(
-      "[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]. Error. Call to getaddrinfo() returned no results.");
+      "[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]: Error. Call to getaddrinfo() failed.");
   }
 
   const addrinfo* curr_result = result;
-  m_serverHandle = INVALID_IO_HANDLE;
-
   while (curr_result != nullptr) {
     m_serverHandle = socket(curr_result->ai_family, curr_result->ai_socktype, curr_result->ai_protocol);
     if (m_serverHandle >= 0) {
-      int yes = 1;
       if (setsockopt(m_serverHandle, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) != 0) {
         OATPP_LOGW("[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]",
                    "Warning. Failed to set %s for accepting socket", "SO_REUSEADDR")
       }
-      if (bind(m_serverHandle, reinterpret_cast<const sockaddr*>(&m_addr), sizeof(m_addr)) == 0) {
+
+      if (bind(m_serverHandle, curr_result->ai_addr, curr_result->ai_addrlen) == 0) {
         break;
       }
 
@@ -113,17 +116,17 @@ ConnectionProvider::ConnectionProvider(Address address)
   freeaddrinfo(result);
 
   if (curr_result == nullptr) {
-    throw std::runtime_error(
-      "[oatpp::network::udp::client::ConnectionProvider::ConnectionProvider()]: Error. Can't create socket");
+    throw std::runtime_error("[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]: "
+      "Error. Couldn't bind");
   }
 
   fcntl(m_serverHandle, F_SETFL, O_NONBLOCK);
 
   // Update port after binding (typicaly in case of port = 0)
-  m_addr = {};
   v_sock_size s_in_len = sizeof(m_addr);
   getsockname(m_serverHandle, reinterpret_cast<sockaddr*>(&m_addr), &s_in_len);
   setProperty(PROPERTY_PORT, utils::conversion::int32ToStr(ntohs(m_addr.sin_port)));
+#endif
 }
 
 std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const Address& address) {
@@ -137,22 +140,66 @@ ConnectionProvider::~ConnectionProvider() {
 void ConnectionProvider::stop() {
   if (!m_closed) {
     m_closed = true;
+#if defined(WIN32) || defined(_WIN32)
+    closesocket(m_serverHandle);
+#else
     close(m_serverHandle);
+#endif
   }
 }
 
 provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get() {
+  while (!m_closed) {
+    fd_set set;
+    timeval timeout{};
+    FD_ZERO(&set);
+    FD_SET(m_serverHandle, &set);
+
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+
+    const auto res = select(
+#if defined(WIN32) || defined(_WIN32)
+      static_cast<int>(m_serverHandle + 1),
+#else
+      m_serverHandle + 1,
+#endif
+      &set,
+      nullptr,
+      nullptr,
+      &timeout);
+
+    if (res >= 0) {
+      break;
+    }
+  }
+
   if (!isValidIOHandle(m_serverHandle)) {
     return nullptr;
   }
+
+#ifdef SO_NOSIGPIPE
+  int yes = 1;
+  v_int32 ret = setsockopt(m_serverHandle, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(int));
+  if(ret < 0) {
+    OATPP_LOGD("[oatpp::network::udp::server::ConnectionProvider::get()]", "Warning. Failed to set %s for socket", "SO_NOSIGPIPE")
+  }
+#endif
 
   return {std::make_shared<Connection>(m_serverHandle, m_addr), m_invalidator};
 }
 
 async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&>
 ConnectionProvider::getAsync() {
-  // TODO(fpasqualini)
-  throw std::runtime_error("[oatpp::network::udp::client::ConnectionProvider::getAsync()]: Error. Not implemented.");
+  /*
+     *  No need to implement this.
+     *  For Asynchronous IO in oatpp it is considered to be a good practice
+     *  to accept connections in a seperate thread with the blocking accept()
+     *  and then process connections in Asynchronous manner with non-blocking read/write
+     *
+     *  It may be implemented later
+     */
+  throw std::runtime_error("[oatpp::network::udp::server::ConnectionProvider::getAsync()]: Error. Not implemented.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +208,11 @@ ConnectionProvider::getAsync() {
 void ConnectionProvider::ConnectionInvalidator::invalidate(const std::shared_ptr<data::stream::IOStream>& connection) {
   const auto conn = std::static_pointer_cast<Connection>(connection);
   const v_io_handle handle = conn->getHandle();
+#if defined(WIN32) || defined(_WIN32)
+  shutdown(handle, SD_BOTH);
+#else
   shutdown(handle, SHUT_RDWR);
+#endif
 }
 
 }}}}

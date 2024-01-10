@@ -29,7 +29,7 @@
 #include "oatpp/core/base/Environment.hpp"
 #include "oatpp/core/data/stream/Stream.hpp"
 
-#include <cstring>
+#include <cerrno>
 #include <fcntl.h>
 #include <stdexcept>
 #include <unistd.h>
@@ -46,6 +46,16 @@ data::stream::DefaultInitializedContext Connection::DEFAULT_CONTEXT(data::stream
 Connection::Connection(const v_io_handle handle, const sockaddr_in addr)
   : m_handle(handle),
     m_addr(addr) {
+
+#if defined(WIN32) || defined(_WIN32)
+
+  // in Windows, there is no reliable method to get if a socket is blocking or not.
+  // Eevery socket is created blocking in Windows so we assume this state and pray.
+
+  setStreamIOMode(data::stream::BLOCKING);
+
+#else
+
   const auto flags = fcntl(m_handle, F_GETFL);
 
   if (flags < 0) {
@@ -58,35 +68,130 @@ Connection::Connection(const v_io_handle handle, const sockaddr_in addr)
   else {
     m_mode = data::stream::IOMode::BLOCKING;
   }
+
+#endif
+
 }
 
 Connection::~Connection() {
   close();
 }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlogical-op"
+#endif
+
 v_io_size Connection::write(const void* buff, const v_buff_size count, async::Action& action) {
-  socklen_t len = sizeof(m_addr);
+#if defined(WIN32) || defined(_WIN32)
+  // TODO(fpasqualini)
+  throw std::runtime_error("[oatpp::network::udp::Connection::write()]: Error. Not implemented.");
+#else
 
-  const auto send_result = sendto(m_handle, buff, static_cast<size_t>(count), 0,
-                                  reinterpret_cast<const struct sockaddr*>(&m_addr), len);
+  errno = 0;
+  v_int32 flags = 0;
 
-  char answer[count];
-  recvfrom(m_handle, answer, static_cast<size_t>(count), 0, reinterpret_cast<sockaddr*>(&m_addr), &len);
+#ifdef MSG_NOSIGNAL
+  flags |= MSG_NOSIGNAL;
+#endif
 
-  return send_result;
+  const auto result = sendto(m_handle, buff, static_cast<size_t>(count), flags,
+                             reinterpret_cast<const struct sockaddr*>(&m_addr), sizeof(m_addr));
+  if (result < 0) {
+    const auto err = errno;
+
+    const bool retry = err == EAGAIN || err == EWOULDBLOCK;
+
+    if (retry) {
+      if (m_mode == data::stream::ASYNCHRONOUS) {
+        action = async::Action::createIOWaitAction(m_handle, async::Action::IOEventType::IO_EVENT_WRITE);
+      }
+      return RETRY_WRITE; // For async io. In case socket is non-blocking
+    }
+
+    if (err == EINTR) {
+      return RETRY_WRITE;
+    }
+
+    if (err == EPIPE) {
+      return BROKEN_PIPE;
+    }
+
+    //OATPP_LOGD("Connection", "write errno=%d", e)
+    return BROKEN_PIPE; // Consider all other errors as a broken pipe.
+  }
+  return result;
+#endif
 }
 
 v_io_size Connection::read(void* buff, const v_buff_size count, async::Action& action) {
-  socklen_t len = sizeof(m_addr);
+#if defined(WIN32) || defined(_WIN32)
+  // TODO(fpasqualini)
+  throw std::runtime_error("[oatpp::network::udp::Connection::read()]: Error. Not implemented.");
+#else
+  errno = 0;
 
-  const auto recv_result = recvfrom(m_handle, buff, static_cast<size_t>(count), 0,
-                                    reinterpret_cast<struct sockaddr*>(&m_addr), &len);
+  v_sock_size len = sizeof(m_addr);
+  const auto result = recvfrom(m_handle, buff, static_cast<size_t>(count), 0,
+                               reinterpret_cast<struct sockaddr*>(&m_addr), &len);
+  if (result < 0) {
+    const auto err = errno;
 
-  sendto(m_handle, buff, static_cast<size_t>(count), 0, reinterpret_cast<const struct sockaddr*>(&m_addr), len);
+    const bool retry = err == EAGAIN || err == EWOULDBLOCK;
 
-  return recv_result;
+    if (retry) {
+      if (m_mode == data::stream::ASYNCHRONOUS) {
+        action = async::Action::createIOWaitAction(m_handle, async::Action::IOEventType::IO_EVENT_READ);
+      }
+      return RETRY_READ; // For async io. In case socket is non-blocking
+    }
+
+    if (err == EINTR) {
+      return RETRY_READ;
+    }
+
+    if (err == ECONNRESET) {
+      return BROKEN_PIPE;
+    }
+
+    //OATPP_LOGD("Connection", "write errno=%d", e)
+    return BROKEN_PIPE; // Consider all other errors as a broken pipe.
+  }
+
+  return result;
+#endif
 }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
+#if defined(WIN32) || defined(_WIN32)
+void Connection::setStreamIOMode(oatpp::data::stream::IOMode ioMode) {
+
+  u_long flags;
+
+  switch(ioMode) {
+    case data::stream::BLOCKING:
+      flags = 0;
+    if(NO_ERROR != ioctlsocket(m_handle, FIONBIO, &flags)) {
+      throw std::runtime_error("[oatpp::network::tcp::Connection::setStreamIOMode()]: Error. Can't set stream I/O mode to IOMode::BLOCKING.");
+    }
+    m_mode = data::stream::BLOCKING;
+    break;
+    case data::stream::ASYNCHRONOUS:
+      flags = 1;
+    if(NO_ERROR != ioctlsocket(m_handle, FIONBIO, &flags)) {
+      throw std::runtime_error("[oatpp::network::tcp::Connection::setStreamIOMode()]: Error. Can't set stream I/O mode to IOMode::ASYNCHRONOUS.");
+    }
+    m_mode = data::stream::ASYNCHRONOUS;
+    break;
+    default:
+      break;
+  }
+
+}
+#else
 void Connection::setStreamIOMode(const data::stream::IOMode ioMode) {
   auto flags = fcntl(m_handle, F_GETFL);
   if (flags < 0) {
@@ -116,6 +221,7 @@ void Connection::setStreamIOMode(const data::stream::IOMode ioMode) {
       break;
   }
 }
+#endif
 
 void Connection::setOutputStreamIOMode(const data::stream::IOMode ioMode) {
   setStreamIOMode(ioMode);
@@ -142,7 +248,11 @@ data::stream::Context& Connection::getInputStreamContext() {
 }
 
 void Connection::close() const {
+#if defined(WIN32) || defined(_WIN32)
+  ::closesocket(m_handle);
+#else
   ::close(m_handle);
+#endif
 }
 
 v_io_handle Connection::getHandle() const {
