@@ -49,7 +49,7 @@ public:
    * Constructor.
    * @param address - &id:oatpp::network::Address;.
    */
-  explicit ConnectionProvider(const Address& address);
+  explicit ConnectionProvider(Address address);
 
   /**
    * Create shared server ConnectionProvider.
@@ -62,6 +62,14 @@ public:
    * Destructor.
    */
   ~ConnectionProvider() override;
+
+  ConnectionProvider(const ConnectionProvider&) = delete;
+
+  ConnectionProvider& operator=(const ConnectionProvider&) = delete;
+
+  ConnectionProvider(ConnectionProvider&&) = delete;
+
+  ConnectionProvider& operator=(ConnectionProvider&&) = delete;
 
   /**
    * Implements &id:oatpp::provider::Provider::stop;.
@@ -93,7 +101,7 @@ private:
   Address m_address;
   std::atomic<bool> m_closed;
   v_io_handle m_serverHandle;
-  sockaddr* m_addr;
+  sockaddr_in m_addr;
 };
 
 }}}}

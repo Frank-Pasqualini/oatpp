@@ -25,13 +25,13 @@
 #ifndef oatpp_network_udp_Connection_hpp
 #define oatpp_network_udp_Connection_hpp
 
-#include <netinet/in.h>
-
 #include "oatpp/core/IODefinitions.hpp"
 #include "oatpp/core/async/Coroutine.hpp"
 #include "oatpp/core/base/Countable.hpp"
 #include "oatpp/core/base/Environment.hpp"
 #include "oatpp/core/data/stream/Stream.hpp"
+
+#include <netinet/in.h>
 
 namespace oatpp { namespace network { namespace udp {
 
@@ -44,14 +44,23 @@ public:
   /**
    * Constructor.
    * @param handle - file descriptor (socket handle). See &id:oatpp::v_io_handle;.
-   * @param addr - TODO
+   * @param addr - socket address
    */
-  Connection(v_io_handle handle, sockaddr* addr);
+  Connection(v_io_handle handle, sockaddr_in addr);
 
   /**
    * Destructor.
    */
   ~Connection() override;
+
+  Connection(const Connection&) = delete;
+
+  Connection& operator=(const Connection&) = delete;
+
+  Connection(Connection&&) = delete;
+
+  Connection& operator=(Connection&&) = delete;
+
 
   /**
    * Implementation of &id:oatpp::data::stream::IOStream::write;.
@@ -112,7 +121,13 @@ public:
   /**
   * Close socket handle.
   */
-  void close();
+  void close() const;
+
+  /**
+  * Get socket handle.
+  * @return - socket handle. &id:oatpp::v_io_handle;.
+  */
+  v_io_handle getHandle() const;
 
 private:
 
@@ -122,7 +137,7 @@ private:
 
   v_io_handle m_handle;
   data::stream::IOMode m_mode;
-  sockaddr* m_addr;
+  sockaddr_in m_addr;
 };
 
 }}}

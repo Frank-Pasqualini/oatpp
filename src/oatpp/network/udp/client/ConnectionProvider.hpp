@@ -63,6 +63,14 @@ public:
   */
   ~ConnectionProvider() override;
 
+  ConnectionProvider(const ConnectionProvider&) = delete;
+
+  ConnectionProvider& operator=(const ConnectionProvider&) = delete;
+
+  ConnectionProvider(ConnectionProvider&&) = delete;
+
+  ConnectionProvider& operator=(ConnectionProvider&&) = delete;
+
   /**
    * Implements &id:oatpp::provider::Provider::stop;.
    */
@@ -93,7 +101,7 @@ private:
   Address m_address;
   std::atomic<bool> m_closed;
   v_io_handle m_clientHandle;
-  sockaddr* m_addr;
+  sockaddr_in m_addr;
 };
 
 }}}}

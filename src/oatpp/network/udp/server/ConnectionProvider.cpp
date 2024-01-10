@@ -24,9 +24,10 @@
 
 #include "ConnectionProvider.hpp"
 
+#include "oatpp/core/IODefinitions.hpp"
 #include "oatpp/core/async/Coroutine.hpp"
+#include "oatpp/core/base/Environment.hpp"
 #include "oatpp/core/data/stream/Stream.hpp"
-#include "oatpp/core/provider/Invalidator.hpp"
 #include "oatpp/core/provider/Provider.hpp"
 #include "oatpp/core/utils/ConversionUtils.hpp"
 #include "oatpp/network/Address.hpp"
@@ -36,7 +37,11 @@
 #include <memory>
 #include <netdb.h>
 #include <stdexcept>
+#include <string>
 #include <unistd.h>
+#include <utility>
+#include <asm-generic/socket.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 
 namespace oatpp { namespace network { namespace udp { namespace server {
@@ -44,13 +49,14 @@ namespace oatpp { namespace network { namespace udp { namespace server {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ConnectionProvider
 
-ConnectionProvider::ConnectionProvider(const Address& address)
+ConnectionProvider::ConnectionProvider(Address address)
   : m_invalidator(std::make_shared<ConnectionInvalidator>())
-    , m_address(address)
-    , m_closed(false) {
+    , m_address(std::move(address))
+    , m_closed(false)
+    , m_addr() {
   setProperty(PROPERTY_HOST, m_address.host);
-  const auto portStr = utils::conversion::int32ToStr(m_address.port);
-  setProperty(PROPERTY_PORT, portStr);
+  const auto port_str = utils::conversion::int32ToStr(m_address.port);
+  setProperty(PROPERTY_PORT, port_str);
 
   addrinfo hints = {};
   hints.ai_socktype = SOCK_DGRAM;
@@ -69,13 +75,13 @@ ConnectionProvider::ConnectionProvider(const Address& address)
       hints.ai_family = AF_UNSPEC;
   }
 
-  addrinfo* result;
-  const auto res = getaddrinfo(m_address.host->c_str(), portStr->c_str(), &hints, &result);
+  addrinfo* result = nullptr;
+  const auto res = getaddrinfo(m_address.host->c_str(), port_str->c_str(), &hints, &result);
 
   if (res != 0) {
-    std::string errorString =
+    std::string error_string =
       "[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]. Error. Call to getaddrinfo() failed: ";
-    throw std::runtime_error(errorString.append(gai_strerror(res)));
+    throw std::runtime_error(error_string.append(gai_strerror(res)));
   }
 
   if (result == nullptr) {
@@ -83,45 +89,41 @@ ConnectionProvider::ConnectionProvider(const Address& address)
       "[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]. Error. Call to getaddrinfo() returned no results.");
   }
 
-  const addrinfo* currResult = result;
+  const addrinfo* curr_result = result;
   m_serverHandle = INVALID_IO_HANDLE;
 
-  while (currResult != nullptr) {
-    m_serverHandle = socket(currResult->ai_family, currResult->ai_socktype, currResult->ai_protocol);
+  while (curr_result != nullptr) {
+    m_serverHandle = socket(curr_result->ai_family, curr_result->ai_socktype, curr_result->ai_protocol);
     if (m_serverHandle >= 0) {
       int yes = 1;
       if (setsockopt(m_serverHandle, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) != 0) {
         OATPP_LOGW("[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]",
-                   "Warning. Failed to set %s for accepting socket: %s", "SO_REUSEADDR", strerror(errno))
+                   "Warning. Failed to set %s for accepting socket", "SO_REUSEADDR")
       }
-
-      if (bind(m_serverHandle, currResult->ai_addr, currResult->ai_addrlen) == 0) {
-        m_addr = currResult->ai_addr;
+      if (bind(m_serverHandle, reinterpret_cast<const sockaddr*>(&m_addr), sizeof(m_addr)) == 0) {
         break;
       }
 
       close(m_serverHandle);
     }
 
-    currResult = currResult->ai_next;
-
+    curr_result = curr_result->ai_next;
   }
 
   freeaddrinfo(result);
 
-  if (currResult == nullptr) {
-    const std::string err = strerror(errno);
-    throw std::runtime_error("[oatpp::network::udp::server::ConnectionProvider::ConnectionProvider()]: "
-                             "Error. Couldn't bind " + err);
+  if (curr_result == nullptr) {
+    throw std::runtime_error(
+      "[oatpp::network::udp::client::ConnectionProvider::ConnectionProvider()]: Error. Can't create socket");
   }
 
   fcntl(m_serverHandle, F_SETFL, O_NONBLOCK);
 
   // Update port after binding (typicaly in case of port = 0)
-  sockaddr_in s_in = {};
-  v_sock_size s_in_len = sizeof(s_in);
-  getsockname(m_serverHandle, reinterpret_cast<sockaddr*>(&s_in), &s_in_len);
-  setProperty(PROPERTY_PORT, utils::conversion::int32ToStr(ntohs(s_in.sin_port)));
+  m_addr = {};
+  v_sock_size s_in_len = sizeof(m_addr);
+  getsockname(m_serverHandle, reinterpret_cast<sockaddr*>(&m_addr), &s_in_len);
+  setProperty(PROPERTY_PORT, utils::conversion::int32ToStr(ntohs(m_addr.sin_port)));
 }
 
 std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const Address& address) {
@@ -140,15 +142,16 @@ void ConnectionProvider::stop() {
 }
 
 provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get() {
-  return provider::ResourceHandle<data::stream::IOStream>(
-    std::make_shared<Connection>(m_serverHandle, m_addr),
-    m_invalidator
-  );
+  if (!isValidIOHandle(m_serverHandle)) {
+    return nullptr;
+  }
+
+  return {std::make_shared<Connection>(m_serverHandle, m_addr), m_invalidator};
 }
 
 async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&>
 ConnectionProvider::getAsync() {
-  // TODO
+  // TODO(fpasqualini)
   throw std::runtime_error("[oatpp::network::udp::client::ConnectionProvider::getAsync()]: Error. Not implemented.");
 }
 
@@ -156,9 +159,9 @@ ConnectionProvider::getAsync() {
 // ConnectionProvider::ConnectionInvalidator
 
 void ConnectionProvider::ConnectionInvalidator::invalidate(const std::shared_ptr<data::stream::IOStream>& connection) {
-  // TODO
-  throw std::runtime_error(
-    "[oatpp::network::udp::client::ConnectionProvider::ConnectionInvalidator::invalidate()]: Error. Not implemented.");
+  const auto conn = std::static_pointer_cast<Connection>(connection);
+  const v_io_handle handle = conn->getHandle();
+  shutdown(handle, SHUT_RDWR);
 }
 
 }}}}
