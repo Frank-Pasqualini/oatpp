@@ -55,8 +55,7 @@ ConnectionProvider::ConnectionProvider(Address address)
   : m_invalidator(std::make_shared<ConnectionInvalidator>())
     , m_address(std::move(address))
     , m_closed(false)
-    , m_serverHandle(INVALID_IO_HANDLE)
-    , m_addr() {
+    , m_serverHandle(INVALID_IO_HANDLE) {
   setProperty(PROPERTY_HOST, m_address.host);
   setProperty(PROPERTY_PORT, utils::conversion::int32ToStr(m_address.port));
 
@@ -123,9 +122,10 @@ ConnectionProvider::ConnectionProvider(Address address)
   fcntl(m_serverHandle, F_SETFL, O_NONBLOCK);
 
   // Update port after binding (typicaly in case of port = 0)
-  v_sock_size s_in_len = sizeof(m_addr);
-  getsockname(m_serverHandle, reinterpret_cast<sockaddr*>(&m_addr), &s_in_len);
-  setProperty(PROPERTY_PORT, utils::conversion::int32ToStr(ntohs(m_addr.sin_port)));
+  sockaddr_in addr{};
+  v_sock_size s_in_len = sizeof(addr);
+  getsockname(m_serverHandle, reinterpret_cast<sockaddr*>(&addr), &s_in_len);
+  setProperty(PROPERTY_PORT, utils::conversion::int32ToStr(ntohs(addr.sin_port)));
 #endif
 }
 
@@ -185,8 +185,8 @@ provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get() {
     OATPP_LOGD("[oatpp::network::udp::server::ConnectionProvider::get()]", "Warning. Failed to set %s for socket", "SO_NOSIGPIPE")
   }
 #endif
-
-  return {std::make_shared<Connection>(m_serverHandle, m_addr), m_invalidator};
+  constexpr sockaddr_in addr{};
+  return {std::make_shared<Connection>(m_serverHandle, addr), m_invalidator};
 }
 
 async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&>

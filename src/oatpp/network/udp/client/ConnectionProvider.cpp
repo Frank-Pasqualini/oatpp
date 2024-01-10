@@ -36,6 +36,7 @@
 #include <netdb.h>
 #include <stdexcept>
 #include <string>
+#include <bits/sockaddr.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 
@@ -100,10 +101,12 @@ provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get() {
 
   const addrinfo* curr_result = result;
   v_io_handle clientHandle = INVALID_IO_HANDLE;
+  sa_family_t family = 0;
 
   while (curr_result != nullptr) {
     clientHandle = socket(curr_result->ai_family, curr_result->ai_socktype, curr_result->ai_protocol);
     if (clientHandle >= 0) {
+      family = curr_result->ai_family;
       break;
     }
     curr_result = curr_result->ai_next;
@@ -124,8 +127,10 @@ provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get() {
 #endif
 
   sockaddr_in addr{};
-  v_sock_size s_in_len = sizeof(addr);
-  getsockname(clientHandle, reinterpret_cast<sockaddr*>(&addr), &s_in_len);
+  addr.sin_family = family;
+  addr.sin_port = htons(m_address.port);
+  addr.sin_addr.s_addr = INADDR_ANY;
+
   return {std::make_shared<Connection>(clientHandle, addr), m_invalidator};
 }
 

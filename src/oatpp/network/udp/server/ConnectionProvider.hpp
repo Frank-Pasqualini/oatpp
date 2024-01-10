@@ -35,7 +35,6 @@
 
 #include <atomic>
 #include <memory>
-#include <netinet/in.h>
 
 namespace oatpp { namespace network { namespace udp { namespace server {
 
@@ -101,7 +100,6 @@ private:
   Address m_address;
   std::atomic<bool> m_closed;
   v_io_handle m_serverHandle;
-  sockaddr_in m_addr;
 };
 
 }}}}
